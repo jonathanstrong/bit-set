@@ -1,12 +1,10 @@
 [package]
 name = "bit-set"
-version = "0.4.0"
-authors = ["Alexis Beingessner <a.beingessner@gmail.com>"]
+version = "0.5.0"
+authors = ["Alexis Beingessner <a.beingessner@gmail.com>", "Jonathan Strong <jstrong@legis.io>"]
 license = "MIT/Apache-2.0"
-description = "A set of bits"
-repository = "https://github.com/contain-rs/bit-set"
-homepage = "https://github.com/contain-rs/bit-set"
-documentation = "https://contain-rs.github.io/bit-set/bit_set"
+description = "A set of bits [fork]"
+repository = "https://github.com/jonathanstrong/bit-set"
 keywords = ["data-structures", "bitset"]
 readme = "README.md"
 
@@ -14,7 +12,8 @@ readme = "README.md"
 rand = "0.3"
 
 [dependencies]
-bit-vec = "0.4"
+bit-vec = { git = "https://github.com/jonathanstrong/bit-vec.git", branch = "v0.5.x" }
 
 [features]
+default = ["nightly"]
 nightly = []
