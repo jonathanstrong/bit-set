@@ -1441,4 +1441,16 @@ mod bench {
         })
     }
 
+    #[bench]
+    fn bench_bit_vecset_iter_u64_storage(b: &mut Bencher) {
+        let bit_vec = BitSet::<u64>::from_bit_vec(BitVec::from_fn(BENCH_BITS,
+                                              |idx| {idx % 3 == 0}));
+        b.iter(|| {
+            let mut sum = 0;
+            for idx in &bit_vec {
+                sum += idx as usize;
+            }
+            sum
+        })
+    }
 }
