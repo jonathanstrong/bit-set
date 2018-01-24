@@ -21,7 +21,7 @@
 //! use bit_set::BitSet;
 //!
 //! // It's a regular set
-//! let mut s = BitSet::new();
+//! let mut s = BitSet::<u32>::new();
 //! s.insert(0);
 //! s.insert(3);
 //! s.insert(7);
@@ -33,7 +33,7 @@
 //! }
 //!
 //! // Can initialize from a `BitVec`
-//! let other = BitSet::from_bytes(&[0b11010000]);
+//! let other = BitSet::<u32>::from_bytes(&[0b11010000]);
 //!
 //! s.union_with(&other);
 //!
@@ -78,8 +78,9 @@ fn blocks_for_bits<B: BitBlock>(bits: usize) -> usize {
     }
 }
 
-// Take two BitVec's, and return iterators of their words, where the shorter one
-// has been padded with 0's
+/// Take two BitVec's, and return iterators of their words, where the shorter one
+/// has been padded with 0's
+///
 fn match_words<'a, 'b, B: BitBlock>(a: &'a BitVec<B>, b: &'b BitVec<B>)
     -> (MatchWords<'a, B>, MatchWords<'b, B>)
 {
@@ -96,7 +97,7 @@ fn match_words<'a, 'b, B: BitBlock>(a: &'a BitVec<B>, b: &'b BitVec<B>)
     }
 }
 
-pub struct BitSet<B = u32> {
+pub struct BitSet<B> {
     bit_vec: BitVec<B>,
 }
 
@@ -157,7 +158,7 @@ impl<B: BitBlock> PartialEq for BitSet<B> {
 
 impl<B: BitBlock> Eq for BitSet<B> {}
 
-impl BitSet<u32> {
+impl<B: BitBlock> BitSet<B> {
     /// Creates a new empty `BitSet`.
     ///
     /// # Examples
@@ -165,7 +166,7 @@ impl BitSet<u32> {
     /// ```
     /// use bit_set::BitSet;
     ///
-    /// let mut s = BitSet::new();
+    /// let mut s = BitSet::<u32>::new();
     /// ```
     #[inline]
     pub fn new() -> Self {
@@ -180,7 +181,7 @@ impl BitSet<u32> {
     /// ```
     /// use bit_set::BitSet;
     ///
-    /// let mut s = BitSet::with_capacity(100);
+    /// let mut s = BitSet::<u32>::with_capacity(100);
     /// assert!(s.capacity() >= 100);
     /// ```
     #[inline]
@@ -201,7 +202,7 @@ impl BitSet<u32> {
     ///     use bit_vec::BitVec;
     ///     use bit_set::BitSet;
     ///
-    ///     let bv = BitVec::from_bytes(&[0b01100000]);
+    ///     let bv = BitVec::<u32>::from_bytes(&[0b01100000]);
     ///     let s = BitSet::from_bit_vec(bv);
     ///
     ///     // Print 1, 2 in arbitrary order
@@ -211,12 +212,12 @@ impl BitSet<u32> {
     /// }
     /// ```
     #[inline]
-    pub fn from_bit_vec(bit_vec: BitVec) -> Self {
+    pub fn from_bit_vec(bit_vec: BitVec<B>) -> Self {
         BitSet { bit_vec: bit_vec }
     }
 
     pub fn from_bytes(bytes: &[u8]) -> Self {
-        BitSet { bit_vec: BitVec::from_bytes(bytes) }
+        BitSet { bit_vec: BitVec::<B>::from_bytes(bytes) }
     }
 }
 
@@ -230,7 +231,7 @@ impl<B: BitBlock> BitSet<B> {
     /// ```
     /// use bit_set::BitSet;
     ///
-    /// let mut s = BitSet::with_capacity(100);
+    /// let mut s = BitSet::<u32>::with_capacity(100);
     /// assert!(s.capacity() >= 100);
     /// ```
     #[inline]
@@ -250,7 +251,7 @@ impl<B: BitBlock> BitSet<B> {
     /// ```
     /// use bit_set::BitSet;
     ///
-    /// let mut s = BitSet::new();
+    /// let mut s = BitSet::<u32>::new();
     /// s.reserve_len(10);
     /// assert!(s.capacity() >= 10);
     /// ```
@@ -275,7 +276,7 @@ impl<B: BitBlock> BitSet<B> {
     /// ```
     /// use bit_set::BitSet;
     ///
-    /// let mut s = BitSet::new();
+    /// let mut s = BitSet::<u32>::new();
     /// s.reserve_len_exact(10);
     /// assert!(s.capacity() >= 10);
     /// ```
@@ -293,7 +294,7 @@ impl<B: BitBlock> BitSet<B> {
     /// ```
     /// use bit_set::BitSet;
     ///
-    /// let mut s = BitSet::new();
+    /// let mut s = BitSet::<u32>::new();
     /// s.insert(0);
     /// s.insert(3);
     ///
@@ -313,7 +314,7 @@ impl<B: BitBlock> BitSet<B> {
     /// ```
     /// use bit_set::BitSet;
     ///
-    /// let mut s = BitSet::new();
+    /// let mut s = BitSet::<u32>::new();
     /// s.insert(0);
     ///
     /// let bv = s.get_ref();
@@ -361,7 +362,7 @@ impl<B: BitBlock> BitSet<B> {
     /// ```
     /// use bit_set::BitSet;
     ///
-    /// let mut s = BitSet::new();
+    /// let mut s = BitSet::<u32>::new();
     /// s.insert(32183231);
     /// s.remove(32183231);
     ///
@@ -394,7 +395,7 @@ impl<B: BitBlock> BitSet<B> {
     /// ```
     /// use bit_set::BitSet;
     ///
-    /// let s = BitSet::from_bytes(&[0b01001010]);
+    /// let s = BitSet::<u32>::from_bytes(&[0b01001010]);
     ///
     /// // Print 1, 4, 6 in arbitrary order
     /// for x in s.iter() {
@@ -414,8 +415,8 @@ impl<B: BitBlock> BitSet<B> {
     /// ```
     /// use bit_set::BitSet;
     ///
-    /// let a = BitSet::from_bytes(&[0b01101000]);
-    /// let b = BitSet::from_bytes(&[0b10100000]);
+    /// let a = BitSet::<u32>::from_bytes(&[0b01101000]);
+    /// let b = BitSet::<u32>::from_bytes(&[0b10100000]);
     ///
     /// // Print 0, 1, 2, 4 in arbitrary order
     /// for x in a.union(&b) {
@@ -441,8 +442,8 @@ impl<B: BitBlock> BitSet<B> {
     /// ```
     /// use bit_set::BitSet;
     ///
-    /// let a = BitSet::from_bytes(&[0b01101000]);
-    /// let b = BitSet::from_bytes(&[0b10100000]);
+    /// let a = BitSet::<u32>::from_bytes(&[0b01101000]);
+    /// let b = BitSet::<u32>::from_bytes(&[0b10100000]);
     ///
     /// // Print 2
     /// for x in a.intersection(&b) {
@@ -469,8 +470,8 @@ impl<B: BitBlock> BitSet<B> {
     /// ```
     /// use bit_set::BitSet;
     ///
-    /// let a = BitSet::from_bytes(&[0b01101000]);
-    /// let b = BitSet::from_bytes(&[0b10100000]);
+    /// let a = BitSet::<u32>::from_bytes(&[0b01101000]);
+    /// let b = BitSet::<u32>::from_bytes(&[0b10100000]);
     ///
     /// // Print 1, 4 in arbitrary order
     /// for x in a.difference(&b) {
@@ -504,8 +505,8 @@ impl<B: BitBlock> BitSet<B> {
     /// ```
     /// use bit_set::BitSet;
     ///
-    /// let a = BitSet::from_bytes(&[0b01101000]);
-    /// let b = BitSet::from_bytes(&[0b10100000]);
+    /// let a = BitSet::<u32>::from_bytes(&[0b01101000]);
+    /// let b = BitSet::<u32>::from_bytes(&[0b10100000]);
     ///
     /// // Print 0, 1, 4 in arbitrary order
     /// for x in a.symmetric_difference(&b) {
@@ -534,9 +535,9 @@ impl<B: BitBlock> BitSet<B> {
     /// let b   = 0b10100000;
     /// let res = 0b11101000;
     ///
-    /// let mut a = BitSet::from_bytes(&[a]);
-    /// let b = BitSet::from_bytes(&[b]);
-    /// let res = BitSet::from_bytes(&[res]);
+    /// let mut a = BitSet::<u32>::from_bytes(&[a]);
+    /// let b = BitSet::<u32>::from_bytes(&[b]);
+    /// let res = BitSet::<u32>::from_bytes(&[res]);
     ///
     /// a.union_with(&b);
     /// assert_eq!(a, res);
@@ -557,9 +558,9 @@ impl<B: BitBlock> BitSet<B> {
     /// let b   = 0b10100000;
     /// let res = 0b00100000;
     ///
-    /// let mut a = BitSet::from_bytes(&[a]);
-    /// let b = BitSet::from_bytes(&[b]);
-    /// let res = BitSet::from_bytes(&[res]);
+    /// let mut a = BitSet::<u32>::from_bytes(&[a]);
+    /// let b = BitSet::<u32>::from_bytes(&[b]);
+    /// let res = BitSet::<u32>::from_bytes(&[res]);
     ///
     /// a.intersect_with(&b);
     /// assert_eq!(a, res);
@@ -582,16 +583,16 @@ impl<B: BitBlock> BitSet<B> {
     /// let a_b = 0b01001000; // a - b
     /// let b_a = 0b10000000; // b - a
     ///
-    /// let mut bva = BitSet::from_bytes(&[a]);
-    /// let bvb = BitSet::from_bytes(&[b]);
-    /// let bva_b = BitSet::from_bytes(&[a_b]);
-    /// let bvb_a = BitSet::from_bytes(&[b_a]);
+    /// let mut bva = BitSet::<u32>::from_bytes(&[a]);
+    /// let bvb = BitSet::<u32>::from_bytes(&[b]);
+    /// let bva_b = BitSet::<u32>::from_bytes(&[a_b]);
+    /// let bvb_a = BitSet::<u32>::from_bytes(&[b_a]);
     ///
     /// bva.difference_with(&bvb);
     /// assert_eq!(bva, bva_b);
     ///
-    /// let bva = BitSet::from_bytes(&[a]);
-    /// let mut bvb = BitSet::from_bytes(&[b]);
+    /// let bva = BitSet::<u32>::from_bytes(&[a]);
+    /// let mut bvb = BitSet::<u32>::from_bytes(&[b]);
     ///
     /// bvb.difference_with(&bva);
     /// assert_eq!(bvb, bvb_a);
@@ -613,9 +614,9 @@ impl<B: BitBlock> BitSet<B> {
     /// let b   = 0b10100000;
     /// let res = 0b11001000;
     ///
-    /// let mut a = BitSet::from_bytes(&[a]);
-    /// let b = BitSet::from_bytes(&[b]);
-    /// let res = BitSet::from_bytes(&[res]);
+    /// let mut a = BitSet::<u32>::from_bytes(&[a]);
+    /// let b = BitSet::<u32>::from_bytes(&[b]);
+    /// let res = BitSet::<u32>::from_bytes(&[res]);
     ///
     /// a.symmetric_difference_with(&b);
     /// assert_eq!(a, res);
@@ -633,11 +634,11 @@ impl<B: BitBlock> BitSet<B> {
     /// ```
     /// use bit_set::BitSet;
     ///
-    /// let mut a = BitSet::new();
+    /// let mut a = BitSet::<u32>::new();
     /// a.insert(2);
     /// a.insert(6);
     ///
-    /// let mut b = BitSet::new();
+    /// let mut b = BitSet::<u32>::new();
     /// b.insert(1);
     /// b.insert(3);
     /// b.insert(6);
@@ -661,7 +662,7 @@ impl<B: BitBlock> BitSet<B> {
     /// ```
     /// use bit_set::BitSet;
     ///
-    /// let mut a = BitSet::new();
+    /// let mut a = BitSet::<u32>::new();
     /// a.insert(2);
     /// a.insert(6);
     /// a.insert(1);
@@ -675,7 +676,7 @@ impl<B: BitBlock> BitSet<B> {
     /// assert_eq!(b, BitSet::from_bytes(&[0b00010010]));
     /// ```
     pub fn split_off(&mut self, at: usize) -> Self {
-        let mut other = BitSet::new();
+        let mut other = BitSet::<u32>::new();
 
         if at == 0 {
             swap(self, &mut other);
@@ -944,7 +945,7 @@ mod tests {
 
     #[test]
     fn test_bit_set_show() {
-        let mut s = BitSet::new();
+        let mut s = BitSet::<u32>::new();
         s.insert(1);
         s.insert(10);
         s.insert(50);
@@ -955,8 +956,8 @@ mod tests {
     #[test]
     fn test_bit_set_from_usizes() {
         let usizes = vec![0, 2, 2, 3];
-        let a: BitSet = usizes.into_iter().collect();
-        let mut b = BitSet::new();
+        let a: BitSet<u32> = usizes.into_iter().collect();
+        let mut b = BitSet::<u32>::new();
         b.insert(0);
         b.insert(2);
         b.insert(3);
@@ -966,12 +967,12 @@ mod tests {
     #[test]
     fn test_bit_set_iterator() {
         let usizes = vec![0, 2, 2, 3];
-        let bit_vec: BitSet = usizes.into_iter().collect();
+        let bit_vec: BitSet<u32> = usizes.into_iter().collect();
 
         let idxs: Vec<_> = bit_vec.iter().collect();
         assert_eq!(idxs, [0, 2, 3]);
 
-        let long: BitSet = (0..10000).filter(|&n| n % 2 == 0).collect();
+        let long: BitSet<u32> = (0..10000).filter(|&n| n % 2 == 0).collect();
         let real: Vec<_> = (0..10000/2).map(|x| x*2).collect();
 
         let idxs: Vec<_> = long.iter().collect();
@@ -984,9 +985,9 @@ mod tests {
         let lengths = [10, 64, 100];
         for &b in &bools {
             for &l in &lengths {
-                let bitset = BitSet::from_bit_vec(BitVec::from_elem(l, b));
+                let bitset = BitSet::<u32>::from_bit_vec(BitVec::from_elem(l, b));
                 assert_eq!(bitset.contains(1), b);
-                assert_eq!(bitset.contains((l-1)), b);
+                assert_eq!(bitset.contains(l-1), b);
                 assert!(!bitset.contains(l));
             }
         }
@@ -995,7 +996,7 @@ mod tests {
     #[test]
     fn test_bit_vec_masking() {
         let b = BitVec::from_elem(140, true);
-        let mut bs = BitSet::from_bit_vec(b);
+        let mut bs = BitSet::<u32>::from_bit_vec(b);
         assert!(bs.contains(139));
         assert!(!bs.contains(140));
         assert!(bs.insert(150));
@@ -1007,7 +1008,7 @@ mod tests {
 
     #[test]
     fn test_bit_set_basic() {
-        let mut b = BitSet::new();
+        let mut b = BitSet::<u32>::new();
         assert!(b.insert(3));
         assert!(!b.insert(3));
         assert!(b.contains(3));
@@ -1022,8 +1023,8 @@ mod tests {
 
     #[test]
     fn test_bit_set_intersection() {
-        let mut a = BitSet::new();
-        let mut b = BitSet::new();
+        let mut a = BitSet::<u32>::new();
+        let mut b = BitSet::<u32>::new();
 
         assert!(a.insert(11));
         assert!(a.insert(1));
@@ -1045,8 +1046,8 @@ mod tests {
 
     #[test]
     fn test_bit_set_difference() {
-        let mut a = BitSet::new();
-        let mut b = BitSet::new();
+        let mut a = BitSet::<u32>::new();
+        let mut b = BitSet::<u32>::new();
 
         assert!(a.insert(1));
         assert!(a.insert(3));
@@ -1064,8 +1065,8 @@ mod tests {
 
     #[test]
     fn test_bit_set_symmetric_difference() {
-        let mut a = BitSet::new();
-        let mut b = BitSet::new();
+        let mut a = BitSet::<u32>::new();
+        let mut b = BitSet::<u32>::new();
 
         assert!(a.insert(1));
         assert!(a.insert(3));
@@ -1085,8 +1086,8 @@ mod tests {
 
     #[test]
     fn test_bit_set_union() {
-        let mut a = BitSet::new();
-        let mut b = BitSet::new();
+        let mut a = BitSet::<u32>::new();
+        let mut b = BitSet::<u32>::new();
         assert!(a.insert(1));
         assert!(a.insert(3));
         assert!(a.insert(5));
@@ -1110,8 +1111,8 @@ mod tests {
 
     #[test]
     fn test_bit_set_subset() {
-        let mut set1 = BitSet::new();
-        let mut set2 = BitSet::new();
+        let mut set1 = BitSet::<u32>::new();
+        let mut set2 = BitSet::<u32>::new();
 
         assert!(set1.is_subset(&set2)); //  {}  {}
         set2.insert(100);
@@ -1136,10 +1137,10 @@ mod tests {
 
     #[test]
     fn test_bit_set_is_disjoint() {
-        let a = BitSet::from_bytes(&[0b10100010]);
-        let b = BitSet::from_bytes(&[0b01000000]);
-        let c = BitSet::new();
-        let d = BitSet::from_bytes(&[0b00110000]);
+        let a = BitSet::<u32>::from_bytes(&[0b10100010]);
+        let b = BitSet::<u32>::from_bytes(&[0b01000000]);
+        let c = BitSet::<u32>::new();
+        let d = BitSet::<u32>::from_bytes(&[0b00110000]);
 
         assert!(!a.is_disjoint(&d));
         assert!(!d.is_disjoint(&a));
@@ -1155,17 +1156,17 @@ mod tests {
     #[test]
     fn test_bit_set_union_with() {
         //a should grow to include larger elements
-        let mut a = BitSet::new();
+        let mut a = BitSet::<u32>::new();
         a.insert(0);
-        let mut b = BitSet::new();
+        let mut b = BitSet::<u32>::new();
         b.insert(5);
-        let expected = BitSet::from_bytes(&[0b10000100]);
+        let expected = BitSet::<u32>::from_bytes(&[0b10000100]);
         a.union_with(&b);
         assert_eq!(a, expected);
 
         // Standard
-        let mut a = BitSet::from_bytes(&[0b10100010]);
-        let mut b = BitSet::from_bytes(&[0b01100010]);
+        let mut a = BitSet::<u32>::from_bytes(&[0b10100010]);
+        let mut b = BitSet::<u32>::from_bytes(&[0b01100010]);
         let c = a.clone();
         a.union_with(&b);
         b.union_with(&c);
@@ -1176,8 +1177,8 @@ mod tests {
     #[test]
     fn test_bit_set_intersect_with() {
         // Explicitly 0'ed bits
-        let mut a = BitSet::from_bytes(&[0b10100010]);
-        let mut b = BitSet::from_bytes(&[0b00000000]);
+        let mut a = BitSet::<u32>::from_bytes(&[0b10100010]);
+        let mut b = BitSet::<u32>::from_bytes(&[0b00000000]);
         let c = a.clone();
         a.intersect_with(&b);
         b.intersect_with(&c);
@@ -1185,8 +1186,8 @@ mod tests {
         assert!(b.is_empty());
 
         // Uninitialized bits should behave like 0's
-        let mut a = BitSet::from_bytes(&[0b10100010]);
-        let mut b = BitSet::new();
+        let mut a = BitSet::<u32>::from_bytes(&[0b10100010]);
+        let mut b = BitSet::<u32>::new();
         let c = a.clone();
         a.intersect_with(&b);
         b.intersect_with(&c);
@@ -1194,8 +1195,8 @@ mod tests {
         assert!(b.is_empty());
 
         // Standard
-        let mut a = BitSet::from_bytes(&[0b10100010]);
-        let mut b = BitSet::from_bytes(&[0b01100010]);
+        let mut a = BitSet::<u32>::from_bytes(&[0b10100010]);
+        let mut b = BitSet::<u32>::from_bytes(&[0b01100010]);
         let c = a.clone();
         a.intersect_with(&b);
         b.intersect_with(&c);
@@ -1206,20 +1207,20 @@ mod tests {
     #[test]
     fn test_bit_set_difference_with() {
         // Explicitly 0'ed bits
-        let mut a = BitSet::from_bytes(&[0b00000000]);
-        let b = BitSet::from_bytes(&[0b10100010]);
+        let mut a = BitSet::<u32>::from_bytes(&[0b00000000]);
+        let b = BitSet::<u32>::from_bytes(&[0b10100010]);
         a.difference_with(&b);
         assert!(a.is_empty());
 
         // Uninitialized bits should behave like 0's
-        let mut a = BitSet::new();
-        let b = BitSet::from_bytes(&[0b11111111]);
+        let mut a = BitSet::<u32>::new();
+        let b = BitSet::<u32>::from_bytes(&[0b11111111]);
         a.difference_with(&b);
         assert!(a.is_empty());
 
         // Standard
-        let mut a = BitSet::from_bytes(&[0b10100010]);
-        let mut b = BitSet::from_bytes(&[0b01100010]);
+        let mut a = BitSet::<u32>::from_bytes(&[0b10100010]);
+        let mut b = BitSet::<u32>::from_bytes(&[0b01100010]);
         let c = a.clone();
         a.difference_with(&b);
         b.difference_with(&c);
@@ -1230,25 +1231,25 @@ mod tests {
     #[test]
     fn test_bit_set_symmetric_difference_with() {
         //a should grow to include larger elements
-        let mut a = BitSet::new();
+        let mut a = BitSet::<u32>::new();
         a.insert(0);
         a.insert(1);
-        let mut b = BitSet::new();
+        let mut b = BitSet::<u32>::new();
         b.insert(1);
         b.insert(5);
-        let expected = BitSet::from_bytes(&[0b10000100]);
+        let expected = BitSet::<u32>::from_bytes(&[0b10000100]);
         a.symmetric_difference_with(&b);
         assert_eq!(a, expected);
 
-        let mut a = BitSet::from_bytes(&[0b10100010]);
-        let b = BitSet::new();
+        let mut a = BitSet::<u32>::from_bytes(&[0b10100010]);
+        let b = BitSet::<u32>::new();
         let c = a.clone();
         a.symmetric_difference_with(&b);
         assert_eq!(a, c);
 
         // Standard
-        let mut a = BitSet::from_bytes(&[0b11100010]);
-        let mut b = BitSet::from_bytes(&[0b01101010]);
+        let mut a = BitSet::<u32>::from_bytes(&[0b11100010]);
+        let mut b = BitSet::<u32>::from_bytes(&[0b01101010]);
         let c = a.clone();
         a.symmetric_difference_with(&b);
         b.symmetric_difference_with(&c);
@@ -1258,9 +1259,9 @@ mod tests {
 
     #[test]
     fn test_bit_set_eq() {
-        let a = BitSet::from_bytes(&[0b10100010]);
-        let b = BitSet::from_bytes(&[0b00000000]);
-        let c = BitSet::new();
+        let a = BitSet::<u32>::from_bytes(&[0b10100010]);
+        let b = BitSet::<u32>::from_bytes(&[0b00000000]);
+        let c = BitSet::<u32>::new();
 
         assert!(a == a);
         assert!(a != b);
@@ -1272,9 +1273,9 @@ mod tests {
 
     #[test]
     fn test_bit_set_cmp() {
-        let a = BitSet::from_bytes(&[0b10100010]);
-        let b = BitSet::from_bytes(&[0b00000000]);
-        let c = BitSet::new();
+        let a = BitSet::<u32>::from_bytes(&[0b10100010]);
+        let b = BitSet::<u32>::from_bytes(&[0b00000000]);
+        let c = BitSet::<u32>::new();
 
         assert_eq!(a.cmp(&b), Greater);
         assert_eq!(a.cmp(&c), Greater);
@@ -1286,7 +1287,7 @@ mod tests {
 
     #[test]
     fn test_bit_vec_remove() {
-        let mut a = BitSet::new();
+        let mut a = BitSet::<u32>::new();
 
         assert!(a.insert(1));
         assert!(a.remove(1));
@@ -1301,7 +1302,7 @@ mod tests {
 
     #[test]
     fn test_bit_vec_clone() {
-        let mut a = BitSet::new();
+        let mut a = BitSet::<u32>::new();
 
         assert!(a.insert(1));
         assert!(a.insert(100));
@@ -1321,11 +1322,11 @@ mod tests {
 /*
     #[test]
     fn test_bit_set_append() {
-        let mut a = BitSet::new();
+        let mut a = BitSet::<u32>::new();
         a.insert(2);
         a.insert(6);
 
-        let mut b = BitSet::new();
+        let mut b = BitSet::<u32>::new();
         b.insert(1);
         b.insert(3);
         b.insert(6);
@@ -1400,7 +1401,7 @@ mod bench {
     #[bench]
     fn bench_bit_vecset_small(b: &mut Bencher) {
         let mut r = rng();
-        let mut bit_vec = BitSet::new();
+        let mut bit_vec = BitSet::<u32>::new();
         b.iter(|| {
             for _ in 0..100 {
                 bit_vec.insert((r.next_u32() as usize) % BITS);
@@ -1412,7 +1413,7 @@ mod bench {
     #[bench]
     fn bench_bit_vecset_big(b: &mut Bencher) {
         let mut r = rng();
-        let mut bit_vec = BitSet::new();
+        let mut bit_vec = BitSet::<u32>::new();
         b.iter(|| {
             for _ in 0..100 {
                 bit_vec.insert((r.next_u32() as usize) % BENCH_BITS);
@@ -1423,7 +1424,7 @@ mod bench {
 
     #[bench]
     fn bench_bit_vecset_iter(b: &mut Bencher) {
-        let bit_vec = BitSet::from_bit_vec(BitVec::from_fn(BENCH_BITS,
+        let bit_vec = BitSet::<u32>::from_bit_vec(BitVec::from_fn(BENCH_BITS,
                                               |idx| {idx % 3 == 0}));
         b.iter(|| {
             let mut sum = 0;
@@ -1432,5 +1433,11 @@ mod bench {
             }
             sum
         })
+    }
+
+    #[test]
+    fn it_creates_a_bitset_with_u64_storage() {
+        let mut set = BitSet::<u64>::new();
+        set.insert(1);
     }
 }
