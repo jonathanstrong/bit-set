@@ -944,6 +944,12 @@ mod tests {
     use bit_vec::BitVec;
 
     #[test]
+    fn it_creates_a_bitset_with_u64_storage() {
+        let mut set = BitSet::<u64>::new();
+        set.insert(1);
+    }
+
+    #[test]
     fn test_bit_set_show() {
         let mut s = BitSet::<u32>::new();
         s.insert(1);
@@ -1435,9 +1441,4 @@ mod bench {
         })
     }
 
-    #[test]
-    fn it_creates_a_bitset_with_u64_storage() {
-        let mut set = BitSet::<u64>::new();
-        set.insert(1);
-    }
 }
