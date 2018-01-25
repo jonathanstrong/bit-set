@@ -355,6 +355,11 @@ impl<B: BitBlock> BitSet<B> {
     }
 
     #[inline]
+    pub unsafe fn get_ref_mut(&mut self) -> &mut BitVec<B> {
+        &mut self.bit_vec
+    }
+
+    #[inline]
     fn other_op<F>(&mut self, other: &Self, mut f: F) where F: FnMut(B, B) -> B {
         // Unwrap BitVecs
         let self_bit_vec = &mut self.bit_vec;
