@@ -767,7 +767,10 @@ impl<B: BitBlock> BitSet<B> {
         // Ensure we have enough space to hold the new element
         let len = self.bit_vec.len();
         if value >= len {
-            self.bit_vec.grow(value - len + 1, false)
+            let grow_min = value - len + 1;
+            let grow_2x = len.checked_mul(2).unwrap_or(::std::usize::MAX);
+            let grow_by = grow_min.max(grow_2x);
+            self.bit_vec.grow(grow_by, false)
         }
 
         self.bit_vec.set(value, true);
