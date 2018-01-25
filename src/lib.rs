@@ -262,6 +262,35 @@ impl<B: BitBlock> BitSet<B> {
         }
     }
 
+    /// Checks if capacity is enough for `len`. If it is, does nothing. If not,
+    /// doubles the existing capacity or reserves `len`, whichever is larger.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bit_set::BitSet;
+    ///
+    /// let mut s = BitSet::<u64>::with_capacity(2);
+    /// assert_eq!(s.len(), 0);
+    /// assert!(s.capacity() >= 2);
+    ///
+    /// s.reserve_2x_if_full(1024);
+    /// assert_eq!(s.len(), 0);
+    /// assert!(s.capacity() >= 1024);
+    /// ```
+    ///
+    pub fn reserve_2x_if_full(&mut self, len: usize) {
+        let capacity = self.bit_vec.capacity();
+        if len >= capacity {
+            let addtl =
+                capacity
+                    .checked_mul(2)
+                    .unwrap_or(::std::usize::MAX)
+                    .max(len);
+            self.bit_vec.reserve(addtl);
+        }
+    }
+
     /// Reserves the minimum capacity for the given `BitSet` to contain `len` distinct elements.
     /// In the case of `BitSet` this means reallocations will not occur as long as all inserted
     /// elements are less than `len`.
