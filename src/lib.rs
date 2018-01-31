@@ -98,6 +98,20 @@ fn match_words<'a, 'b, B: BitBlock>(a: &'a BitVec<B>, b: &'b BitVec<B>)
     }
 }
 
+fn match_words3<'a, 'b, 'c, B: BitBlock>(a: &'a BitVec<B>, b: &'b BitVec<B>, c: &'c BitVec<B>)
+    -> (MatchWords<'a, B>, MatchWords<'b, B>, MatchWords<'c, B>)
+{
+    let a_len = a.storage().len();
+    let b_len = b.storage().len();
+    let c_len = c.storage().len();
+
+    let max_len = cmp::max(a_len, cmp::max(b_len, c_len));
+
+    (a.blocks().enumerate().chain(iter::repeat(B::zero()).enumerate().take(max_len).skip(a_len)),
+     b.blocks().enumerate().chain(iter::repeat(B::zero()).enumerate().take(max_len).skip(b_len)),
+     c.blocks().enumerate().chain(iter::repeat(B::zero()).enumerate().take(max_len).skip(c_len)),)
+}
+
 pub struct BitSet<B> {
     bit_vec: BitVec<B>,
 }
@@ -500,6 +514,86 @@ impl<B: BitBlock> BitSet<B> {
             set: self.bit_vec.blocks(),
             other: other.bit_vec.blocks(),
             merge: bitand,
+        }).take(min))
+    }
+
+    /// Iterates over the intersection of `c` with the intersection of `a` and `b`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bit_set::BitSet;
+    ///
+    /// let mut a = BitSet::<u64>::default();
+    /// a.insert(1);
+    /// a.insert(2);
+    /// a.insert(3);
+    ///
+    /// let mut b = BitSet::<u64>::default();
+    /// b.insert(2);
+    /// b.insert(3);
+    ///
+    /// let mut c = BitSet::<u64>::default();
+    /// c.insert(3);
+    ///
+    /// let mut iter = a.intersection3(&b, &c);
+    ///
+    /// assert_eq!(iter.next(), Some(3));
+    /// assert_eq!(iter.next(), None);
+    /// ```
+    ///
+    #[inline]
+    pub fn intersection3<'a>(&'a self, b: &'a Self, c: &'a Self) -> Op3<'a, B> {
+        fn bitand<B: BitBlock>(w1: B, w2: B) -> B { w1 & w2 }
+        let min = cmp::min(self.bit_vec.len(), cmp::min(b.bit_vec.len(), c.bit_vec.len()));
+
+        Op3(BlockIter::from_blocks(BitPos3 {
+            a: self.bit_vec.blocks(),
+            b: b.bit_vec.blocks(),
+            c: c.bit_vec.blocks(),
+            merge_ab: bitand,
+            merge_bc: bitand,
+        }).take(min))
+    }
+
+    /// Iterates over the difference of `c` with the intersection of `a` and `b`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bit_set::BitSet;
+    ///
+    /// let mut a = BitSet::<u64>::default();
+    /// a.insert(1);
+    /// a.insert(2);
+    /// a.insert(3);
+    ///
+    /// let mut b = BitSet::<u64>::default();
+    /// b.insert(2);
+    /// b.insert(3);
+    ///
+    /// let mut c = BitSet::<u64>::default();
+    /// c.insert(1);
+    ///
+    /// let mut iter = a.intersection_difference(&b, &c);
+    ///
+    /// assert_eq!(iter.next(), Some(2));
+    /// assert_eq!(iter.next(), Some(3));
+    /// assert_eq!(iter.next(), None);
+    /// ```
+    ///
+    #[inline]
+    pub fn intersection_difference<'a>(&'a self, b: &'a Self, c: &'a Self) -> Op3<'a, B> {
+        fn bitand<B: BitBlock>(w1: B, w2: B) -> B { w1 & w2 }
+        fn diff<B: BitBlock>(w1: B, w2: B) -> B { w1 & !w2 }
+        let min = cmp::min(self.bit_vec.len(), cmp::min(b.bit_vec.len(), c.bit_vec.len()));
+
+        Op3(BlockIter::from_blocks(BitPos3 {
+            a: self.bit_vec.blocks(),
+            b: b.bit_vec.blocks(),
+            c: c.bit_vec.blocks(),
+            merge_ab: bitand,
+            merge_bc: diff,
         }).take(min))
     }
 
@@ -932,6 +1026,13 @@ struct BitPos3<'a, B: 'a> {
     merge_bc: fn(B, B) -> B,
 }
 
+// #[derive(Clone)]
+// struct Op3<'a, B: 'a, P, N> {
+//     prev: P,
+//     new: N,
+//     merge: fn(B, B) -> B,
+// }
+
 /// An iterator for `BitSet`.
 #[derive(Clone)]
 pub struct Iter<'a, B: 'a>(BlockIter<Blocks<'a, B>, B>);
@@ -948,7 +1049,7 @@ pub struct Difference<'a, B: 'a>(BlockIter<TwoBitPositions<'a, B>, B>);
 #[derive(Clone)]
 pub struct SymmetricDifference<'a, B: 'a>(BlockIter<TwoBitPositions<'a, B>, B>);
 
-pub struct Intersection3<'a, B: 'a>(Take<BlockIter<BitPos3<'a, B>, B>>);
+pub struct Op3<'a, B: 'a>(Take<BlockIter<BitPos3<'a, B>, B>>);
 
 pub struct IndexIter<'a, B: 'a> {
     iter: bit_vec::Iter<'a, B>,
@@ -1102,6 +1203,42 @@ impl<'a, B: BitBlock> Iterator for TwoBitPositions<'a, B> {
     }
 }
 
+impl<'a, B: BitBlock> Iterator for BitPos3<'a, B> {
+    type Item = B;
+
+    fn next(&mut self) -> Option<B> {
+        match (self.a.next(), self.b.next(), self.c.next()) {
+
+            (a, b, c) if a.is_some() || b.is_some() || c.is_some() => {
+                let a = a.unwrap_or_else(|| B::zero());
+                let b = b.unwrap_or_else(|| B::zero());
+                let c = c.unwrap_or_else(|| B::zero());
+                let ab = (self.merge_ab)(a, b);
+                let bc = (self.merge_bc)(ab, c);
+                Some(bc)
+            }
+
+            _ => return None
+        }
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        use cmp::max;
+        let (a, au) = self.a.size_hint();
+        let (b, bu) = self.b.size_hint();
+        let (c, cu) = self.c.size_hint();
+
+        let u = max(au.unwrap_or(0), max(bu.unwrap_or(0), cu.unwrap_or(0)));
+
+        let u = if u > 0 { Some(u) } else { None };
+
+        let l = max(a, max(b, c));
+
+        (l, u)
+    }
+}
+
 impl<'a, B: BitBlock> Iterator for Iter<'a, B> {
     type Item = usize;
 
@@ -1122,6 +1259,13 @@ impl<'a, B: BitBlock> Iterator for Union<'a, B> {
 }
 
 impl<'a, B: BitBlock> Iterator for Intersection<'a, B> {
+    type Item = usize;
+
+    #[inline] fn next(&mut self) -> Option<usize> { self.0.next() }
+    #[inline] fn size_hint(&self) -> (usize, Option<usize>) { self.0.size_hint() }
+}
+
+impl<'a, B: BitBlock> Iterator for Op3<'a, B> {
     type Item = usize;
 
     #[inline] fn next(&mut self) -> Option<usize> { self.0.next() }
@@ -1150,6 +1294,12 @@ impl<'a, B: BitBlock> IntoIterator for &'a BitSet<B> {
         self.iter()
     }
 }
+
+// impl<'a, B> Intersection<'a, B> {
+//     pub fn intersection(self, other: &'a BitSet<B>) -> Op3<'a, B> {
+//         fn bitand<B: BitBlock>(w1: B, w2: B) -> B { w1 & w2 }
+//     }
+// }
 
 #[cfg(test)]
 mod tests {
