@@ -52,6 +52,9 @@
 #[cfg(all(test, feature = "nightly"))] extern crate rand;
 extern crate bit_vec;
 
+#[cfg(feature = "par-iter")]
+extern crate rayon;
+
 use bit_vec::{BitVec, Blocks, BitBlock};
 use std::cmp::Ordering;
 use std::cmp;
@@ -59,6 +62,12 @@ use std::fmt;
 use std::mem;
 use std::hash;
 use std::iter::{self, Chain, Enumerate, FromIterator, Repeat, Skip, Take, repeat};
+
+#[cfg(feature = "par-iter")]
+use std::sync::{Arc, Mutex};
+
+#[cfg(feature = "par-iter")]
+use rayon::prelude::*;
 
 type MatchWords<'a, B> = Chain<Enumerate<Blocks<'a, B>>, Skip<Take<Enumerate<Repeat<B>>>>>;
 
@@ -1026,6 +1035,15 @@ impl<'a, B> DoubleEndedIterator for IndexIter<'a, B>
 //         // return offset + (index of LSB)
 //         Some(self.head_offset + (B::count_ones(k) as usize))
 //     }
+// }
+
+// #[cfg(feature = "par-iter")]
+// impl<'a> ParallelIterator for Arc<Mutex<BlockIter<Blocks<'a, u64>, u64>>> {
+//     type Item = usize;
+//     // fn into_par_iter(self) -> Self::Iter {
+//     //     let h = self.next().unwrap_or(B::zero());
+//     //     BlockIter {tail: self, head: h, head_offset: 0}
+//     // }
 // }
 
 impl<'a, T, B: BitBlock> Iterator for BlockIter<T, B> where T: Iterator<Item=B> {
