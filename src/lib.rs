@@ -922,17 +922,33 @@ struct TwoBitPositions<'a, B: 'a> {
     merge: fn(B, B) -> B,
 }
 
+/// An iterator combining three `BitSet` iterators.
+#[derive(Clone)]
+struct BitPos3<'a, B: 'a> {
+    a: Blocks<'a, B>,
+    b: Blocks<'a, B>,
+    c: Blocks<'a, B>,
+    merge_ab: fn(B, B) -> B,
+    merge_bc: fn(B, B) -> B,
+}
+
 /// An iterator for `BitSet`.
 #[derive(Clone)]
 pub struct Iter<'a, B: 'a>(BlockIter<Blocks<'a, B>, B>);
+
 #[derive(Clone)]
 pub struct Union<'a, B: 'a>(BlockIter<TwoBitPositions<'a, B>, B>);
+
 #[derive(Clone)]
 pub struct Intersection<'a, B: 'a>(Take<BlockIter<TwoBitPositions<'a, B>, B>>);
+
 #[derive(Clone)]
 pub struct Difference<'a, B: 'a>(BlockIter<TwoBitPositions<'a, B>, B>);
+
 #[derive(Clone)]
 pub struct SymmetricDifference<'a, B: 'a>(BlockIter<TwoBitPositions<'a, B>, B>);
+
+pub struct Intersection3<'a, B: 'a>(Take<BlockIter<BitPos3<'a, B>, B>>);
 
 pub struct IndexIter<'a, B: 'a> {
     iter: bit_vec::Iter<'a, B>,
