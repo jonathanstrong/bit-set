@@ -98,19 +98,19 @@ fn match_words<'a, 'b, B: BitBlock>(a: &'a BitVec<B>, b: &'b BitVec<B>)
     }
 }
 
-fn match_words3<'a, 'b, 'c, B: BitBlock>(a: &'a BitVec<B>, b: &'b BitVec<B>, c: &'c BitVec<B>)
-    -> (MatchWords<'a, B>, MatchWords<'b, B>, MatchWords<'c, B>)
-{
-    let a_len = a.storage().len();
-    let b_len = b.storage().len();
-    let c_len = c.storage().len();
-
-    let max_len = cmp::max(a_len, cmp::max(b_len, c_len));
-
-    (a.blocks().enumerate().chain(iter::repeat(B::zero()).enumerate().take(max_len).skip(a_len)),
-     b.blocks().enumerate().chain(iter::repeat(B::zero()).enumerate().take(max_len).skip(b_len)),
-     c.blocks().enumerate().chain(iter::repeat(B::zero()).enumerate().take(max_len).skip(c_len)),)
-}
+// fn match_words3<'a, 'b, 'c, B: BitBlock>(a: &'a BitVec<B>, b: &'b BitVec<B>, c: &'c BitVec<B>)
+//     -> (MatchWords<'a, B>, MatchWords<'b, B>, MatchWords<'c, B>)
+// {
+//     let a_len = a.storage().len();
+//     let b_len = b.storage().len();
+//     let c_len = c.storage().len();
+// 
+//     let max_len = cmp::max(a_len, cmp::max(b_len, c_len));
+// 
+//     (a.blocks().enumerate().chain(iter::repeat(B::zero()).enumerate().take(max_len).skip(a_len)),
+//      b.blocks().enumerate().chain(iter::repeat(B::zero()).enumerate().take(max_len).skip(b_len)),
+//      c.blocks().enumerate().chain(iter::repeat(B::zero()).enumerate().take(max_len).skip(c_len)),)
+// }
 
 pub struct BitSet<B> {
     bit_vec: BitVec<B>,
